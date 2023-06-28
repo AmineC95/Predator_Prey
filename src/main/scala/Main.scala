@@ -5,6 +5,7 @@ import scalafx.scene.Scene
 import javafx.scene.input.KeyCode
 import scalafx.scene.paint.Color._
 import scalafx.scene.shape.Rectangle
+import scalafx.scene.text.{Text, Font}
 import scalafx.scene.SceneIncludes.jfxScene2sfx
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -13,8 +14,8 @@ import scala.util.Random
 
 object Main extends JFXApp3 {
   val windowSize = 600
-  val cellSize = 25
-  val numberOfPredators = 3
+  val cellSize = 10
+  val numberOfPredators = 5
 
   type Coordinates = (Int, Int)
   case class Predator(location: Coordinates)
@@ -66,9 +67,28 @@ object Main extends JFXApp3 {
   }
 
   def updateGame(state: State): State = {
-
     val updatedPredators = movePredators(state.predators, state.prey)
-    state.copy(predators = updatedPredators)
+    val updatedPrey = state.prey
+
+    val isGameOver = state.predators.exists { predator =>
+      predator.location == state.prey.location
+    }
+
+    if (isGameOver) {
+      stage.getScene.setFill(Black)
+      val gameOverText = new Text("Game Over") {
+        fill = Red
+        font = Font("Arial", 48)
+      }
+      val textBounds = gameOverText.getBoundsInLocal
+      gameOverText.layoutX = (windowSize - textBounds.getWidth) / 2
+      gameOverText.layoutY = (windowSize - textBounds.getHeight) / 2
+
+      val gameOverGroup = new javafx.scene.Group(gameOverText)
+      stage.getScene.setRoot(gameOverGroup)
+    }
+
+    state.copy(predators = updatedPredators, prey = updatedPrey)
   }
 
   def movePredators(predators: List[Predator], prey: Prey): List[Predator] = {
@@ -85,7 +105,6 @@ object Main extends JFXApp3 {
       predator.copy(location = (boundedX, boundedY))
     }
   }
-
 
   def drawState(state: State): List[Rectangle] = {
     val prey = new Rectangle {
