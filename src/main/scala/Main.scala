@@ -14,6 +14,7 @@ import scala.util.Random
 object Main extends JFXApp3 {
   val windowSize = 600
   val cellSize = 25
+  val numberOfPredators = 3
 
   type Coordinates = (Int, Int)
   case class Predator(location: Coordinates)
@@ -22,9 +23,11 @@ object Main extends JFXApp3 {
 
   override def start(): Unit = {
     val initialState = ObjectProperty(
-      State(List(Predator((250, 250))), Prey((300, 300)))
+      State(
+        (1 to numberOfPredators).map(_ => Predator((Random.nextInt(windowSize - cellSize), Random.nextInt(windowSize - cellSize)))).toList,
+        Prey((300, 300))
+      )
     )
-
     stage = new PrimaryStage {
       title = "Predator Prey Game"
       width = windowSize
@@ -42,7 +45,7 @@ object Main extends JFXApp3 {
             case KeyCode.LEFT => initialState.value = currentState.copy(prey = Prey(((currentState.prey.location._1 - cellSize) max 0, currentState.prey.location._2)))
             case _ => ()
           }
-          content = drawState(initialState.value) // Actualise l'affichage après le déplacement de la proie
+          content = drawState(initialState.value)
         }
       }
     }
@@ -51,7 +54,7 @@ object Main extends JFXApp3 {
       val currentState = initialState.value
       initialState.value = updateGame(currentState)
       Platform.runLater {
-        stage.getScene.content = drawState(initialState.value) // Actualise l'affichage après chaque mise à jour du jeu
+        stage.getScene.content = drawState(initialState.value)
       }
     }
   }
@@ -63,7 +66,7 @@ object Main extends JFXApp3 {
   }
 
   def updateGame(state: State): State = {
-    // Implement movePredators to move each predator towards the prey
+
     val updatedPredators = movePredators(state.predators, state.prey)
     state.copy(predators = updatedPredators)
   }
@@ -73,11 +76,9 @@ object Main extends JFXApp3 {
       val predatorLocation = predator.location
       val preyLocation = prey.location
 
-      // Calculer les nouvelles coordonnées
       val newX = if (preyLocation._1 > predatorLocation._1) predatorLocation._1 + 1 else if (preyLocation._1 < predatorLocation._1) predatorLocation._1 - 1 else predatorLocation._1
       val newY = if (preyLocation._2 > predatorLocation._2) predatorLocation._2 + 1 else if (preyLocation._2 < predatorLocation._2) predatorLocation._2 - 1 else predatorLocation._2
 
-      // S'assurer que les nouvelles coordonnées sont dans les limites de la fenêtre
       val boundedX = newX.max(0).min(windowSize - cellSize)
       val boundedY = newY.max(0).min(windowSize - cellSize)
 
